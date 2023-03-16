@@ -10,7 +10,7 @@ const mongoose = require("mongoose");
 // }
 // mongoConnect();
 
-mongoose.connect("mongodb+srv://cgawande:12345@cluster0.gx4suc9.mongodb.net/ecom", {
+mongoose.connect(process.env.URL, {
   useNewUrlParser: true,
 });
 mongoose.connection.on("error", (error) => {
