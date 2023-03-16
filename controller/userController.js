@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const userModel = require("../model/userSchema");
 const { sendEmail } = require("../services/emailService");
 
+//user register
 const userSignup = async (req, res) => {
   try {
     const isUserExist = await userModel.findOne({
@@ -33,9 +34,9 @@ const userSignup = async (req, res) => {
   }
 };
 
+//user login
 const userLogin = async (req, res) => {
   try {
-    console.log(req.body);
     const isEmailExist = await userModel.findOne({
       userEmail: req.body.userEmail,
     });
@@ -45,11 +46,10 @@ const userLogin = async (req, res) => {
         message: "User with this email is not found",
       });
     } else {
-      const isMatch = bcrypt.compare(
+      const isMatch = await bcrypt.compare(
         req.body.userPassword,
         isEmailExist.userPassword
       );
-
       if (isMatch) {
         const token = jwt.sign(
           { userId: isEmailExist._id },
@@ -65,7 +65,7 @@ const userLogin = async (req, res) => {
       } else {
         res.status(401).json({
           success: false,
-          message: "Password not match",
+          message: "Invalid user password",
         });
       }
     }
@@ -77,8 +77,8 @@ const userLogin = async (req, res) => {
   }
 };
 
+//user forgot password
 const forgotPassword = async (req, res) => {
-  console.log(req.body)
   try {
     const isEmailExist = await userModel.findOne({
       userEmail: req.body.userEmail,
@@ -93,6 +93,7 @@ const forgotPassword = async (req, res) => {
       res.status(200).json({
         success: true,
         message: "Email send successfully",
+        token: token,
       });
     } else {
       res.status(404).json({
@@ -108,20 +109,26 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+//reset password
 const resetPassword = async (req, res) => {
-  const { newPassword, confirmPassword } = req.body;
   try {
+    const { newPassword, confirmPassword } = req.body;
     const isUserExist = await userModel.findById(req.params.id);
     if (isUserExist) {
-      const { userId } = jwt.verify(req.params.token, process.env.SECRET_KEY);
+      jwt.verify(req.params.token, process.env.SECRET_KEY);
       if (newPassword === confirmPassword) {
         const userPass = await bcrypt.hash(newPassword, 10);
-        const saveNewPassword = await userModel.findByIdAndUpdate(userId, {
-          userPassword: userPass,
+        await userModel.findByIdAndUpdate(isUserExist._id, {
+          $set: { userPassword: userPass },
         });
         res.status(202).json({
           success: false,
           message: "Password updated successfully",
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Password not match",
         });
       }
     } else {
@@ -138,12 +145,16 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// change password
 const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword, confirmPassword } = req.body;
     const isUserExist = await userModel.findById(req.params.id);
     if (isUserExist) {
-      const isMatch = bcrypt.compare(currentPassword, isUserExist.userPassword);
+      const isMatch = await bcrypt.compare(
+        currentPassword,
+        isUserExist.userPassword
+      );
       if (isMatch && newPassword === confirmPassword) {
         const password = await bcrypt.hash(newPassword, 10);
         const updatePassword = await userModel.findByIdAndUpdate(
@@ -152,6 +163,7 @@ const changePassword = async (req, res) => {
             userPassword: password,
           }
         );
+        await updatePassword.save();
         res.status(202).json({
           success: true,
           message: "User password upadated sucessfully",
@@ -176,6 +188,34 @@ const changePassword = async (req, res) => {
   }
 };
 
+//user data update
+const userDetailsUpdate = async (req, res) => {
+  try {
+    const isUserExist = await userModel.findById(req.params.id);
+    if (isUserExist) {
+      const upadatedUser = await userModel.findByIdAndUpdate(
+        req.params.id,
+        req.body
+      );
+      res.status(202).json({
+        success: true,
+        message: "User details updated sucessfully",
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: "Error occured " + err.message,
+    });
+  }
+};
+
+//user logout
 const userLogout = async (req, res) => {
   try {
     const isUserExist = await userModel.findOne({
@@ -208,6 +248,7 @@ module.exports = {
   resetPassword,
   userLogout,
   changePassword,
+  userDetailsUpdate,
 };
 
 /*

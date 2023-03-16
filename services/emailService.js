@@ -1,6 +1,5 @@
 const nodemailer = require("nodemailer");
 const sendEmail = (email,id,token) => {
-  console.log("mail send")
   var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
@@ -15,7 +14,7 @@ const sendEmail = (email,id,token) => {
     subject: "Password reset",
     html: `
         <p> You are requested for password reset</p>
-        <h5>click here <a href="http//localhost:3000/reset/:${id}/${token}" >link </a>to reset password</h5>
+        <h5>click here <a href="http//localhost:3000/reset/${id}/${token}" >link </a>to reset password</h5>
         <p> This is only valid for 15 minutes`,
   };
 
