@@ -1,26 +1,22 @@
 const nodemailer = require("nodemailer");
-require("dotenv").config();
-
-const sender = process.env.EMAIL;
-const password = process.env.PASS;
-
-const sendEmail = (email, token) => {
+const sendEmail = (email,id,token) => {
+  console.log("mail send")
   var transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: sender,
-      pass: password,
+      user: process.env.EMAIL,
+      pass: process.env.PASS,
     },
   });
 
   var mailOptions = {
-    from: sender,
+    from:process.env.EMAIL,
     to: email,
     subject: "Password reset",
     html: `
         <p> You are requested for password reset</p>
-        <h5>click to this <a href="http//localhost:3000/reset/${token}" >link </a>to reset password</h5>
-        <p> This is only valid for 20 minutes`,
+        <h5>click here <a href="http//localhost:3000/reset/:${id}/${token}" >link </a>to reset password</h5>
+        <p> This is only valid for 15 minutes`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {

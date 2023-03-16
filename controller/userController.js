@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const userModel = require("../model/userSchema");
+const { sendEmail } = require("../services/emailService");
 
 const userSignup = async (req, res) => {
   try {
@@ -77,8 +78,28 @@ const userLogin = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
+  console.log(req.body)
   try {
-
+    const isEmailExist = await userModel.findOne({
+      userEmail: req.body.userEmail,
+    });
+    if (isEmailExist) {
+      const token = jwt.sign(
+        { userId: isEmailExist._id },
+        process.env.SECRET_KEY,
+        { expiresIn: "15m" }
+      );
+      sendEmail(req.body.userEmail, isEmailExist._id, token);
+      res.status(200).json({
+        success: true,
+        message: "Email send successfully",
+      });
+    } else {
+      res.status(404).json({
+        success: false,
+        message: "User with this email not found",
+      });
+    }
   } catch (err) {
     res.status(400).json({
       success: false,
@@ -87,6 +108,73 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+const resetPassword = async (req, res) => {
+  const { newPassword, confirmPassword } = req.body;
+  try {
+    const isUserExist = await userModel.findById(req.params.id);
+    if (isUserExist) {
+      const { userId } = jwt.verify(req.params.token, process.env.SECRET_KEY);
+      if (newPassword === confirmPassword) {
+        const userPass = await bcrypt.hash(newPassword, 10);
+        const saveNewPassword = await userModel.findByIdAndUpdate(userId, {
+          userPassword: userPass,
+        });
+        res.status(202).json({
+          success: false,
+          message: "Password updated successfully",
+        });
+      }
+    } else {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: "Error occured " + err.message,
+    });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+    const isUserExist = await userModel.findById(req.params.id);
+    if (isUserExist) {
+      const isMatch = bcrypt.compare(currentPassword, isUserExist.userPassword);
+      if (isMatch && newPassword === confirmPassword) {
+        const password = await bcrypt.hash(newPassword, 10);
+        const updatePassword = await userModel.findByIdAndUpdate(
+          req.params.id,
+          {
+            userPassword: password,
+          }
+        );
+        res.status(202).json({
+          success: true,
+          message: "User password upadated sucessfully",
+        });
+      } else {
+        res.status(401).json({
+          success: false,
+          message: "Password not match",
+        });
+      }
+    } else {
+      res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: "Error occured " + err.message,
+    });
+  }
+};
 
 const userLogout = async (req, res) => {
   try {
@@ -113,9 +201,14 @@ const userLogout = async (req, res) => {
   }
 };
 
-module.exports = { userSignup, userLogin, userLogout };
-
-
+module.exports = {
+  userSignup,
+  userLogin,
+  forgotPassword,
+  resetPassword,
+  userLogout,
+  changePassword,
+};
 
 /*
 //const jwt = require('jsonwebtoken');
