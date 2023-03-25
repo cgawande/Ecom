@@ -18,6 +18,7 @@ const isImage = (req, file, callback) => {
         callback(new Error("only image is allowed"));
     }
 }
+const multerUpload = Multer({ storage: Multer.memoryStorage() });
 
 const upload = multer({
     storage: imageConfig,
@@ -25,7 +26,7 @@ const upload = multer({
 })
 
 module.exports = {
-    upload
+    upload,multerUpload
 }
 
   //for pdf
