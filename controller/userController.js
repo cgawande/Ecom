@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const userModel = require("../model/userSchema");
-const {uploadToBucket} =require("../services/bucketConfig")
+const {uploadToBucket} =require("../services/awsConfig")
 
 const userSignup = async (req, res) => {
   try {
