@@ -16,6 +16,7 @@ const userSignup = async (req, res) => {
       });
     } else {
       let fileName=await uploadToBucket(req,res)
+      console.log(filename)
       const newUser = new userModel(req.body);
       newUser.userPassword = await bcrypt.hash(req.body.userPassword, 10);
       newUser.profilePic = fileName;
