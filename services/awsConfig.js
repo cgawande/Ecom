@@ -9,6 +9,7 @@ const uploadToBucket=async(req,res)=>{
     Key: `${Date.now()}+${file.originalname}`,
     Body: file.buffer
   };
+  console.log(file)
  s3.upload(s3Params, async(err, data) => {
     if (err) {
       console.error(err);
