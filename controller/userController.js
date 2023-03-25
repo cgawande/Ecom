@@ -16,7 +16,7 @@ const userSignup = async (req, res) => {
     } else {
       const newUser = new userModel(req.body);
       newUser.userPassword = await bcrypt.hash(req.body.userPassword, 10);
-      newUser.profilePic = `/uploads/${req.file.filename}`;
+      newUser.profilePic = req.file.path;
       await newUser.save();
       res.status(201).json({
         success: true,
