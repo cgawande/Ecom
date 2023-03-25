@@ -18,7 +18,7 @@ const isImage = (req, file, callback) => {
         callback(new Error("only image is allowed"));
     }
 }
-const multerUpload = Multer({ storage: Multer.memoryStorage() });
+const multerUpload = multer({ storage: multer.memoryStorage() });
 
 const upload = multer({
     storage: imageConfig,
