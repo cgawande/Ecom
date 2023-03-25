@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 
 const userModel = require("../model/userSchema");
+const {uploadToBucket} =require("../services/bucketConfig")
 
 const userSignup = async (req, res) => {
   try {
@@ -14,9 +15,10 @@ const userSignup = async (req, res) => {
         message: "User  email already exist",
       });
     } else {
+      let fileName=await uploadToBucket(req,res)
       const newUser = new userModel(req.body);
       newUser.userPassword = await bcrypt.hash(req.body.userPassword, 10);
-      newUser.profilePic = req.file.path;
+      newUser.profilePic = fileName;
       await newUser.save();
       res.status(201).json({
         success: true,
